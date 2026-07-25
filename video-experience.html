@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>影音體驗頁</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c0f;
+    --panel:rgba(18,20,24,0.86);
+    --panel-line:rgba(255,255,255,0.09);
+    --text:#f5f7f8;
+    --text-dim:#9aa4ac;
+    --accent:#06C755;
+    --accent-dim:rgba(6,199,85,0.16);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    overflow:hidden; overscroll-behavior:none;
+  }
+  #stage{
+    position:fixed; inset:0; background:#000;
+  }
+  video{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  }
+  .vignette{
+    position:absolute; inset:0; pointer-events:none;
+    background:
+      linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 55%, rgba(10,12,15,0.2) 75%, rgba(10,12,15,0.96) 100%);
+  }
+
+  /* Top progress bar — the signature element: shows real video playback progress */
+  #progress-wrap{
+    position:absolute; top:0; left:0; right:0; height:3px; z-index:20;
+    background:rgba(255,255,255,0.14);
+    padding-top:env(safe-area-inset-top);
+  }
+  #progress-bar{
+    height:3px; width:0%; background:var(--accent);
+    box-shadow:0 0 8px rgba(6,199,85,0.7);
+    transition:width 0.1s linear;
+  }
+
+  #top-controls{
+    position:absolute; top:14px; left:14px; right:14px; z-index:20;
+    display:flex; justify-content:space-between; align-items:center;
+    padding-top:env(safe-area-inset-top);
+  }
+  .circle-btn{
+    width:38px; height:38px; border-radius:50%;
+    background:rgba(10,12,15,0.45); backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,0.16);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; cursor:pointer; flex-shrink:0;
+  }
+  .circle-btn svg{width:17px; height:17px;}
+
+  #center-play{
+    position:absolute; inset:0; z-index:15;
+    display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.25);
+  }
+  #center-play.show{ display:flex; }
+  #center-play .play-circle{
+    width:64px; height:64px; border-radius:50%;
+    background:rgba(255,255,255,0.94);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  #center-play svg{ width:24px; height:24px; margin-left:3px; }
+
+  /* Bottom sheet */
+  #sheet{
+    position:absolute; left:0; right:0; bottom:0; z-index:18;
+    background:var(--panel);
+    backdrop-filter:blur(18px);
+    border-top:1px solid var(--panel-line);
+    border-radius:22px 22px 0 0;
+    padding:10px 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+    max-height:46vh;
+    display:flex; flex-direction:column;
+    transform:translateY(calc(100% - 64px));
+    transition:transform 0.35s cubic-bezier(.2,.9,.25,1);
+  }
+  #sheet.expanded{ transform:translateY(0); }
+  #sheet-handle{
+    width:36px; height:4px; border-radius:2px;
+    background:rgba(255,255,255,0.28);
+    margin:2px auto 12px auto; flex-shrink:0;
+  }
+  #sheet-scroll{
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+  }
+  #sheet-scroll::-webkit-scrollbar{ display:none; }
+
+  .eyebrow{
+    font-family:'Inter',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 6px 0;
+  }
+  h1{
+    font-family:'Manrope',sans-serif; font-weight:800; font-size:20px; line-height:1.25;
+    margin:0 0 8px 0; color:var(--text);
+  }
+  p.desc{
+    font-size:13.5px; line-height:1.6; color:var(--text-dim);
+    margin:0 0 16px 0; white-space:pre-line;
+  }
+
+  .link-list{ display:flex; flex-direction:column; gap:8px; }
+  .link-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; padding:13px 16px; border-radius:12px;
+    font-size:14px; font-weight:700; text-decoration:none;
+    border:1px solid transparent; cursor:pointer;
+  }
+  .link-btn.primary{ background:var(--accent); color:#04220f; }
+  .link-btn.secondary{ background:rgba(255,255,255,0.06); color:var(--text); border-color:rgba(255,255,255,0.14); }
+  .link-btn svg{ width:14px; height:14px; flex-shrink:0; }
+
+  #empty-state{
+    position:absolute; inset:0; z-index:30; background:var(--bg);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:32px; gap:10px;
+  }
+  #empty-state.show{ display:flex; }
+  #empty-state h2{ font-family:'Manrope',sans-serif; font-size:17px; margin:0; color:var(--text); }
+  #empty-state p{ font-size:13px; color:var(--text-dim); margin:0; max-width:280px; line-height:1.6; }
+</style>
+</head>
+<body>
+
+  <div id="stage">
+    <video id="player" playsinline webkit-playsinline muted loop preload="auto"></video>
+    <div class="vignette"></div>
+
+    <div id="progress-wrap"><div id="progress-bar"></div></div>
+
+    <div id="top-controls">
+      <div class="circle-btn" id="btn-close" title="關閉">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+      <div class="circle-btn" id="btn-mute" title="靜音切換">
+        <svg id="icon-muted" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16 8.5a4.5 4.5 0 010 7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.4"/><path d="M2 2l20 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg id="icon-sound" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16 8.5a4.5 4.5 0 010 7M18.5 6a8 8 0 010 12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+
+    <div id="center-play"><div class="play-circle">
+      <svg viewBox="0 0 24 24" fill="#0a0c0f"><path d="M8 5v14l11-7z"/></svg>
+    </div></div>
+
+    <div id="sheet">
+      <div id="sheet-handle"></div>
+      <div id="sheet-scroll">
+        <p class="eyebrow" id="ov-eyebrow">立即了解</p>
+        <h1 id="ov-title">精彩內容搶先看</h1>
+        <p class="desc" id="ov-desc">往上滑看更多介紹與聯絡方式。</p>
+        <div class="link-list" id="ov-links"></div>
+      </div>
+    </div>
+
+    <div id="empty-state">
+      <h2>找不到影片內容</h2>
+      <p>這個頁面需要從名片卡片點擊進入，才能帶入正確的影片與介紹內容。</p>
+    </div>
+  </div>
+
+<script>
+  // ------------------------------------------------------------------
+  // 站長設定：申請好新的 LIFF App 之後，把 ID 貼在這裡
+  // ------------------------------------------------------------------
+  const LIFF_ID = "2010822462-ekOD0fZ7";
+
+  const qs = new URLSearchParams(location.search);
+
+  function getParam(key, fallback) {
+    const v = qs.get(key);
+    return (v && v.trim()) ? v : fallback;
+  }
+
+  const cfg = {
+    video: getParam("video", ""),
+    poster: getParam("poster", ""),
+    eyebrow: getParam("eyebrow", "立即了解"),
+    title: getParam("title", "精彩內容搶先看"),
+    desc: getParam("desc", "往上滑看更多介紹與聯絡方式。"),
+    links: []
+  };
+  for (let i = 1; i <= 3; i++) {
+    const label = qs.get("link" + i + "_label");
+    const url = qs.get("link" + i + "_url");
+    if (label && url) cfg.links.push({ label, url, primary: i === 1 });
+  }
+
+  const player = document.getElementById("player");
+  const emptyState = document.getElementById("empty-state");
+
+  if (!cfg.video) {
+    emptyState.classList.add("show");
+  } else {
+    if (cfg.poster) player.setAttribute("poster", cfg.poster);
+    player.src = cfg.video;
+
+    document.getElementById("ov-eyebrow").innerText = cfg.eyebrow;
+    document.getElementById("ov-title").innerText = cfg.title;
+    document.getElementById("ov-desc").innerText = cfg.desc;
+
+    const linksWrap = document.getElementById("ov-links");
+    if (cfg.links.length === 0) {
+      linksWrap.style.display = "none";
+    } else {
+      linksWrap.innerHTML = cfg.links.map(l => `
+        <a href="javascript:void(0)" class="link-btn ${l.primary ? 'primary' : 'secondary'}" data-url="${l.url.replace(/"/g, '&quot;')}">
+          <span>${l.label}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </a>
+      `).join('');
+      linksWrap.querySelectorAll('.link-btn').forEach(btn => {
+        btn.addEventListener('click', () => openExternal(btn.getAttribute('data-url')));
+      });
+    }
+
+    player.addEventListener('loadedmetadata', () => {
+      player.play().catch(() => {
+        document.getElementById('center-play').classList.add('show');
+      });
+    });
+    player.addEventListener('timeupdate', () => {
+      if (player.duration) {
+        document.getElementById('progress-bar').style.width = (player.currentTime / player.duration * 100) + '%';
+      }
+    });
+  }
+
+  document.getElementById('center-play').addEventListener('click', function () {
+    player.play();
+    this.classList.remove('show');
+  });
+
+  // Mute toggle
+  let isMuted = true;
+  document.getElementById('btn-mute').addEventListener('click', () => {
+    isMuted = !isMuted;
+    player.muted = isMuted;
+    document.getElementById('icon-muted').style.display = isMuted ? 'block' : 'none';
+    document.getElementById('icon-sound').style.display = isMuted ? 'none' : 'block';
+  });
+
+  // Bottom sheet expand/collapse — tap handle or swipe up
+  const sheet = document.getElementById('sheet');
+  const handle = document.getElementById('sheet-handle');
+  handle.addEventListener('click', () => sheet.classList.toggle('expanded'));
+
+  let startY = null;
+  sheet.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+  sheet.addEventListener('touchend', e => {
+    if (startY === null) return;
+    const diff = startY - e.changedTouches[0].clientY;
+    if (diff > 30) sheet.classList.add('expanded');
+    else if (diff < -30) sheet.classList.remove('expanded');
+    startY = null;
+  }, { passive: true });
+
+  // Close button
+  document.getElementById('btn-close').addEventListener('click', () => {
+    if (window.liff && liff.isInClient && liff.isInClient()) {
+      liff.closeWindow();
+    } else {
+      history.back();
+    }
+  });
+
+  function openExternal(url) {
+    if (window.liff && liff.isInClient && liff.isInClient()) {
+      liff.openWindow({ url: url, external: true });
+    } else {
+      window.open(url, '_blank');
+    }
+  }
+
+  // Init LIFF quietly in the background; page still works fine as a normal webpage if this fails
+  if (window.liff) {
+    liff.init({ liffId: LIFF_ID }).catch(err => console.warn('LIFF init failed (page still works):', err));
+  }
+</script>
+</body>
+</html>
