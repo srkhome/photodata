@@ -226,7 +226,14 @@
     }
 
     player.addEventListener('loadedmetadata', () => {
-      player.play().catch(() => {
+      player.play().then(() => {
+        // Autoplay succeeded (muted, as required by mobile browsers). Now try to
+        // switch sound on automatically — this works in most contexts (including
+        // LINE's in-app browser) since playback already legitimately started.
+        // If the platform silently blocks it, the mute button stays visible so
+        // the person can just tap it once to turn sound on manually.
+        tryAutoUnmute();
+      }).catch(() => {
         document.getElementById('center-play').classList.add('show');
       });
     });
@@ -251,17 +258,34 @@
       this.classList.remove('is-replay');
       this.querySelector('.play-circle').innerHTML = '<svg viewBox="0 0 24 24" fill="#0a0c0f"><path d="M8 5v14l11-7z"/></svg>';
     }
-    player.play();
+    player.play().then(tryAutoUnmute);
     this.classList.remove('show');
   });
 
   // Mute toggle
   let isMuted = true;
+  function syncMuteIcon() {
+    document.getElementById('icon-muted').style.display = isMuted ? 'block' : 'none';
+    document.getElementById('icon-sound').style.display = isMuted ? 'none' : 'block';
+  }
+  function tryAutoUnmute() {
+    if (!isMuted) return;
+    player.muted = false;
+    isMuted = false;
+    syncMuteIcon();
+    // Some platforms silently keep the element muted even after this — if so,
+    // fall back to showing the muted state so the tap-to-unmute button is accurate.
+    setTimeout(() => {
+      if (player.muted) {
+        isMuted = true;
+        syncMuteIcon();
+      }
+    }, 150);
+  }
   document.getElementById('btn-mute').addEventListener('click', () => {
     isMuted = !isMuted;
     player.muted = isMuted;
-    document.getElementById('icon-muted').style.display = isMuted ? 'block' : 'none';
-    document.getElementById('icon-sound').style.display = isMuted ? 'none' : 'block';
+    syncMuteIcon();
   });
 
   // Bottom sheet expand/collapse — tap handle or swipe up
