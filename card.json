@@ -102,8 +102,8 @@
               "layout": "vertical",
               "height": "36px",
               "cornerRadius": "8px",
-              "backgroundColor": "#FFFFFF",
-              "borderColor": "#06C755",
+              "backgroundColor": "#2D8CFF",
+              "borderColor": "#FFFFFF",
               "borderWidth": "light",
               "justifyContent": "center",
               "alignItems": "center",
@@ -116,7 +116,33 @@
                 {
                   "type": "text",
                   "text": "分享",
-                  "color": "#06C755",
+                  "color": "#FFFFFF",
+                  "size": "sm",
+                  "weight": "bold",
+                  "align": "center"
+                }
+              ]
+            },
+            {
+              "type": "box",
+              "layout": "vertical",
+              "height": "36px",
+              "cornerRadius": "8px",
+              "backgroundColor": "#000000",
+              "borderColor": "#FFFFFF",
+              "borderWidth": "light",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "action": {
+                "type": "uri",
+                "label": "更名網頁",
+                "uri": "https://srkhome.github.io/change-ID/"
+              },
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "更名網頁",
+                  "color": "#FFFFFF",
                   "size": "sm",
                   "weight": "bold",
                   "align": "center"
