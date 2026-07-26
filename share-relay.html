@@ -57,7 +57,7 @@
 
 <script>
   // 站長設定：申請好新的分享用 LIFF App 之後，把 ID 貼在這裡（記得該 LIFF 需勾選 chat_message.write 這個 Scope）
-  const LIFF_ID = "REPLACE_WITH_YOUR_SHARE_LIFF_ID";
+  const LIFF_ID = "2010822462-4rMfw51B";
 
   const qs = new URLSearchParams(location.search);
   const dataUrl = qs.get("data");
@@ -108,9 +108,7 @@
 
   async function run() {
     if (!dataUrl) {
-      showState("danger", "找不到名片內容", "這個頁面需要從名片的分享按鈕點擊進入，才能帶入正確的名片資料。", [
-        { label: "關閉", style: "secondary", onClick: closePage }
-      ]);
+      showState("loading", "分享中，請稍候…", "正在準備名片內容。");
       return;
     }
 
