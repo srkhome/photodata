@@ -109,6 +109,16 @@
   async function run() {
     if (!dataUrl) {
       showState("loading", "分享中，請稍候…", "正在準備名片內容。");
+      // Safety net: if there's genuinely no data param, nothing will ever
+      // resolve this "loading" state — show a way out after a short wait
+      // instead of leaving the person stuck here forever.
+      setTimeout(() => {
+        if (!dataUrl) {
+          showState("info", "無法載入名片內容", "這個頁面需要從名片的分享按鈕點擊進入，才能帶入正確的名片資料。", [
+            { label: "關閉", style: "secondary", onClick: closePage }
+          ]);
+        }
+      }, 4000);
       return;
     }
 
