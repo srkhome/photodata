@@ -186,78 +186,80 @@
   // ------------------------------------------------------------------
   const LIFF_ID = "2010822462-ekOD0fZ7";
 
-  const qs = new URLSearchParams(location.search);
-
-  function getParam(key, fallback) {
-    const v = qs.get(key);
-    return (v && v.trim()) ? v : fallback;
-  }
-
-  const cfg = {
-    video: getParam("video", ""),
-    poster: getParam("poster", ""),
-    eyebrow: getParam("eyebrow", "立即了解"),
-    title: getParam("title", "精彩內容搶先看"),
-    desc: getParam("desc", "往上滑看更多介紹與聯絡方式。"),
-    links: []
-  };
-  for (let i = 1; i <= 3; i++) {
-    const label = qs.get("link" + i + "_label");
-    const url = qs.get("link" + i + "_url");
-    if (label && url) cfg.links.push({ label, url, primary: i === 1 });
-  }
-
   const player = document.getElementById("player");
   const emptyState = document.getElementById("empty-state");
 
-  if (!cfg.video) {
-    emptyState.classList.add("show");
-  } else {
-    if (cfg.poster) player.setAttribute("poster", cfg.poster);
-    player.src = cfg.video;
+  function setupVideoContent() {
+    const qs = new URLSearchParams(location.search);
 
-    document.getElementById("ov-eyebrow").innerText = cfg.eyebrow;
-    document.getElementById("ov-title").innerText = cfg.title;
-    document.getElementById("ov-desc").innerText = cfg.desc;
-
-    const linksWrap = document.getElementById("ov-links");
-    if (cfg.links.length === 0) {
-      linksWrap.style.display = "none";
-    } else {
-      linksWrap.innerHTML = cfg.links.map(l => `
-        <a href="javascript:void(0)" class="link-btn ${l.primary ? 'primary' : 'secondary'}" data-url="${l.url.replace(/"/g, '&quot;')}">
-          <span>${l.label}</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
-        </a>
-      `).join('');
-      linksWrap.querySelectorAll('.link-btn').forEach(btn => {
-        btn.addEventListener('click', () => openExternal(btn.getAttribute('data-url')));
-      });
+    function getParam(key, fallback) {
+      const v = qs.get(key);
+      return (v && v.trim()) ? v : fallback;
     }
 
-    player.addEventListener('loadedmetadata', () => {
-      player.play().then(() => {
-        // Autoplay succeeded (muted, as required by mobile browsers). Now try to
-        // switch sound on automatically — this works in most contexts (including
-        // LINE's in-app browser) since playback already legitimately started.
-        // If the platform silently blocks it, the mute button stays visible so
-        // the person can just tap it once to turn sound on manually.
-        tryAutoUnmute();
-      }).catch(() => {
-        document.getElementById('center-play').classList.add('show');
-      });
-    });
-    player.addEventListener('timeupdate', () => {
-      if (player.duration) {
-        document.getElementById('progress-bar').style.width = (player.currentTime / player.duration * 100) + '%';
+    const cfg = {
+      video: getParam("video", ""),
+      poster: getParam("poster", ""),
+      eyebrow: getParam("eyebrow", "立即了解"),
+      title: getParam("title", "精彩內容搶先看"),
+      desc: getParam("desc", "往上滑看更多介紹與聯絡方式。"),
+      links: []
+    };
+    for (let i = 1; i <= 3; i++) {
+      const label = qs.get("link" + i + "_label");
+      const url = qs.get("link" + i + "_url");
+      if (label && url) cfg.links.push({ label, url, primary: i === 1 });
+    }
+
+    if (!cfg.video) {
+      emptyState.classList.add("show");
+    } else {
+      if (cfg.poster) player.setAttribute("poster", cfg.poster);
+      player.src = cfg.video;
+
+      document.getElementById("ov-eyebrow").innerText = cfg.eyebrow;
+      document.getElementById("ov-title").innerText = cfg.title;
+      document.getElementById("ov-desc").innerText = cfg.desc;
+
+      const linksWrap = document.getElementById("ov-links");
+      if (cfg.links.length === 0) {
+        linksWrap.style.display = "none";
+      } else {
+        linksWrap.innerHTML = cfg.links.map(l => `
+          <a href="javascript:void(0)" class="link-btn ${l.primary ? 'primary' : 'secondary'}" data-url="${l.url.replace(/"/g, '&quot;')}">
+            <span>${l.label}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+          </a>
+        `).join('');
+        linksWrap.querySelectorAll('.link-btn').forEach(btn => {
+          btn.addEventListener('click', () => openExternal(btn.getAttribute('data-url')));
+        });
       }
-    });
-    // Video finished playing → play a brief "retract" animation, then close
-    // this LIFF page automatically and return to the LINE chat. No menu, no buttons.
-    player.addEventListener('ended', () => {
-      document.getElementById('stage').classList.add('closing');
-      setTimeout(closeExperiencePage, 550);
-    });
+
+      player.addEventListener('loadedmetadata', () => {
+        player.play().then(() => {
+          // Autoplay succeeded (muted, as required by mobile browsers). Now try to
+          // switch sound on automatically — this works in most contexts (including
+          // LINE's in-app browser) since playback already legitimately started.
+          // If the platform silently blocks it, the mute button stays visible so
+          // the person can just tap it once to turn sound on manually.
+          tryAutoUnmute();
+        }).catch(() => {
+          document.getElementById('center-play').classList.add('show');
+        });
+      });
+      player.addEventListener('timeupdate', () => {
+        if (player.duration) {
+          document.getElementById('progress-bar').style.width = (player.currentTime / player.duration * 100) + '%';
+        }
+      });
+      // Video finished playing → play a brief "retract" animation, then close
+      // this LIFF page automatically and return to the LINE chat. No menu, no buttons.
+      player.addEventListener('ended', () => {
+        document.getElementById('stage').classList.add('closing');
+        setTimeout(closeExperiencePage, 550);
+      });
+    }
   }
 
   document.getElementById('center-play').addEventListener('click', function () {
@@ -329,9 +331,16 @@
     }
   }
 
-  // Init LIFF quietly in the background; page still works fine as a normal webpage if this fails
+  // Init LIFF first — this is what unwraps the liff.line.me short-link's
+  // wrapped query params (liff.state) back into real ones. Only AFTER this
+  // settles (success OR failure) do we read location.search and set up the
+  // video, so we never miss the "video"/"poster"/etc. params.
   if (window.liff) {
-    liff.init({ liffId: LIFF_ID }).catch(err => console.warn('LIFF init failed (page still works):', err));
+    liff.init({ liffId: LIFF_ID })
+      .catch(err => console.warn('LIFF init failed (page still works):', err))
+      .finally(setupVideoContent);
+  } else {
+    setupVideoContent();
   }
 </script>
 </body>

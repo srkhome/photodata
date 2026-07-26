@@ -59,9 +59,6 @@
   // 站長設定：申請好新的分享用 LIFF App 之後，把 ID 貼在這裡（記得該 LIFF 需勾選 chat_message.write 這個 Scope）
   const LIFF_ID = "2010822462-4rMfw51B";
 
-  const qs = new URLSearchParams(location.search);
-  const dataUrl = qs.get("data");
-
   const el = {
     spinner: document.getElementById("spinner"),
     iconSlot: document.getElementById("icon-slot"),
@@ -106,27 +103,31 @@
     }
   }
 
-  async function run() {
-    if (!dataUrl) {
-      showState("loading", "分享中，請稍候…", "正在準備名片內容。");
-      // Safety net: if there's genuinely no data param, nothing will ever
-      // resolve this "loading" state — show a way out after a short wait
-      // instead of leaving the person stuck here forever.
-      setTimeout(() => {
-        if (!dataUrl) {
-          showState("info", "無法載入名片內容", "這個頁面需要從名片的分享按鈕點擊進入，才能帶入正確的名片資料。", [
-            { label: "關閉", style: "secondary", onClick: closePage }
-          ]);
-        }
-      }, 4000);
-      return;
-    }
+  // Read the "data" param fresh from the CURRENT location — must only be
+  // called AFTER liff.init() resolves. LIFF's liff.line.me short link wraps
+  // the original query string into a temporary "liff.state" param during the
+  // redirect; liff.init() is what unwraps it back into real query params
+  // (via history.replaceState). Reading location.search too early gets the
+  // still-wrapped, unusable value and the page hangs forever waiting for
+  // "data" that it already missed.
+  function getDataUrl() {
+    return new URLSearchParams(location.search).get("data");
+  }
 
+  async function run() {
     try {
       await liff.init({ liffId: LIFF_ID });
     } catch (err) {
       showState("danger", "初始化失敗", "無法連接 LINE 服務，請稍後再試一次。", [
         { label: "重試", style: "primary", onClick: run },
+        { label: "關閉", style: "secondary", onClick: closePage }
+      ]);
+      return;
+    }
+
+    const dataUrl = getDataUrl();
+    if (!dataUrl) {
+      showState("info", "無法載入名片內容", "這個頁面需要從名片的分享按鈕點擊進入，才能帶入正確的名片資料。", [
         { label: "關閉", style: "secondary", onClick: closePage }
       ]);
       return;
