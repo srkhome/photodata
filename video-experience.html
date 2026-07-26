@@ -135,7 +135,7 @@
 <body>
 
   <div id="stage">
-    <video id="player" playsinline webkit-playsinline muted loop preload="auto"></video>
+    <video id="player" playsinline webkit-playsinline muted preload="auto"></video>
     <div class="vignette"></div>
 
     <div id="progress-wrap"><div id="progress-bar"></div></div>
@@ -235,9 +235,22 @@
         document.getElementById('progress-bar').style.width = (player.currentTime / player.duration * 100) + '%';
       }
     });
+    // Video finished playing → automatically slide the bottom sheet open
+    // so the person doesn't have to swipe it up themselves, and offer a replay option.
+    player.addEventListener('ended', () => {
+      sheet.classList.add('expanded');
+      const cp = document.getElementById('center-play');
+      cp.classList.add('show', 'is-replay');
+      cp.querySelector('.play-circle').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#0a0c0f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 105.64 18.36L1 14M22.36 9.64L18 10"/></svg>';
+    });
   }
 
   document.getElementById('center-play').addEventListener('click', function () {
+    if (this.classList.contains('is-replay')) {
+      player.currentTime = 0;
+      this.classList.remove('is-replay');
+      this.querySelector('.play-circle').innerHTML = '<svg viewBox="0 0 24 24" fill="#0a0c0f"><path d="M8 5v14l11-7z"/></svg>';
+    }
     player.play();
     this.classList.remove('show');
   });
