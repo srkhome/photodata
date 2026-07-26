@@ -1,0 +1,105 @@
+{
+  "type": "flex",
+  "altText": "這是我的 LINE 數位個人名片，歡迎交流！",
+  "contents": {
+    "type": "carousel",
+    "contents": [
+      {
+        "type": "bubble",
+        "hero": {
+          "type": "image",
+          "url": "https://srkhome.github.io/photodata/76297416.jpg",
+          "size": "full",
+          "aspectRatio": "20:13",
+          "aspectMode": "cover",
+          "action": {
+            "type": "uri",
+            "label": "播放影片",
+            "uri": "https://liff.line.me/2010822462-ekOD0fZ7?video=https%3A%2F%2Fsrkhome.github.io%2Fphotodata%2F76297416.mp4&poster=https%3A%2F%2Fsrkhome.github.io%2Fphotodata%2F76297416.jpg&title=%E5%AE%9C%E4%BB%81%E5%B1%85%E5%AE%B6&desc=%E5%B0%88%E6%B3%A8%E6%96%BC+AI+%E7%94%A2%E5%93%81%E8%A8%AD%E8%A8%88%E8%88%87+Web+%E5%85%A8%E6%A3%A7%E9%96%8B%E7%99%BC%EF%BC%8C%E6%AD%A1%E8%BF%8E%E8%81%AF%E7%B5%A1%E4%BA%A4%E6%B5%81%E8%88%87%E5%90%88%E4%BD%9C%EF%BC%81&link1_label=LINE%E9%9B%BB%E5%AD%90%E5%90%8D%E7%89%87&link1_url=https%3A%2F%2Fsrkhome.github.io%2Fe-card%2F&link2_label=%E5%AE%A2%E6%9C%8D&link2_url=https%3A%2F%2Fsrkhome.github.io%2FAI-crm%2F"
+          }
+        },
+        "body": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "text",
+              "text": "宜仁居家",
+              "weight": "bold",
+              "size": "xl",
+              "wrap": true,
+              "color": "#1e293b"
+            },
+            {
+              "type": "text",
+              "text": "專注於 AI 產品設計與 Web 全棧開發，歡迎聯絡交流與合作！",
+              "size": "sm",
+              "color": "#64748b",
+              "wrap": true,
+              "margin": "md"
+            }
+          ]
+        },
+        "footer": {
+          "type": "box",
+          "layout": "vertical",
+          "spacing": "sm",
+          "contents": [
+            {
+              "type": "box",
+              "layout": "vertical",
+              "height": "36px",
+              "cornerRadius": "8px",
+              "backgroundColor": "#FF334B",
+              "borderColor": "#FFFFFF",
+              "borderWidth": "light",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "action": {
+                "type": "uri",
+                "label": "LINE電子名片",
+                "uri": "https://srkhome.github.io/e-card/"
+              },
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "LINE電子名片",
+                  "color": "#FFFFFF",
+                  "size": "sm",
+                  "weight": "bold",
+                  "align": "center"
+                }
+              ]
+            },
+            {
+              "type": "box",
+              "layout": "vertical",
+              "height": "36px",
+              "cornerRadius": "8px",
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#000000",
+              "borderWidth": "light",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "action": {
+                "type": "uri",
+                "label": "客服",
+                "uri": "https://srkhome.github.io/AI-crm/"
+              },
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "客服",
+                  "color": "#000000",
+                  "size": "sm",
+                  "weight": "bold",
+                  "align": "center"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
